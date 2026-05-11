@@ -49,7 +49,9 @@
     .script{font-size:1.1rem}
     .meta{font-size:var(--text-xs);color:var(--color-text-muted)}
     .content{display:grid;gap:var(--space-4)}
-    .hero-card{padding:var(--space-5);display:grid;gap:var(--space-4);max-width:none;margin:0;min-height:70vh;align-content:start}
+    .hero-card{padding:var(--space-5);display:grid;gap:var(--space-4);max-width:none;margin:0;align-content:start}
+    .hero-card.is-consonant{min-height:70vh}
+    .hero-card.is-vowel{min-height:auto}
     .pair-large{display:grid;grid-template-columns:repeat(2,minmax(280px,1fr));gap:var(--space-4)}
     .script-box{background:var(--color-surface-2);border-radius:var(--radius-lg);padding:var(--space-4);text-align:center}
     .script-box .label{font-size:var(--text-xs);color:var(--color-text-muted);margin-bottom:var(--space-2);text-transform:uppercase;letter-spacing:0.08em}
@@ -85,6 +87,7 @@
     .mobile-drawer.open{display:block}
     .drawer-panel{background:var(--color-surface);border-radius:1rem 1rem 0 0;border:1px solid var(--color-border);max-height:90vh;overflow:auto;padding:var(--space-4)}
     .drawer-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-3)}
+
     @media (max-width: 900px){
       .focus-toolbar{display:flex}
     }
@@ -395,6 +398,8 @@
       }
 
       focusView.innerHTML = htmlStr;
+      focusView.classList.toggle('is-consonant', letter.type === 'consonant');
+      focusView.classList.toggle('is-vowel', letter.type === 'vowel');
       focusView.classList.remove('hidden');
       var openDrawer = document.getElementById('openDrawer');
       var prevBtn = document.getElementById('prevLetter');
@@ -462,7 +467,6 @@
 
       chartMain.innerHTML = mainHtml;
 
-      // Missing letters: letters that exist in compare script but not in base script
       var missVowels = vowelRows.filter(function(v){ return v[compKey] && !v[baseKey]; });
       var missCons = consRows.filter(function(c){ return c[compKey] && !c[baseKey]; });
       var missHtml = '';
@@ -496,7 +500,6 @@
       }
       chartMissing.innerHTML = missHtml;
     }
-
 
     function toggleDrawer(open){
       var drawer = document.getElementById('mobileDrawer');
