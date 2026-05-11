@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Learn to Read & Write</title>
+  <title>Learn to Read and Write</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;500;700&family=Noto+Sans+Malayalam:wght@400;500;700&family=Noto+Sans+Devanagari:wght@400;500;700&family=Noto+Sans+Telugu:wght@400;500;700&family=Noto+Sans+Tamil:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -35,11 +35,11 @@
     .compare-group{display:flex;gap:var(--space-2);justify-self:flex-end;align-items:center;flex-wrap:wrap}
     .compare-label{font-size:var(--text-xs);color:var(--color-text-muted)}
     .lang-select{border-radius:var(--radius-pill);border:1px solid var(--color-border);background:var(--color-surface);padding:0.35rem 0.8rem;font-size:var(--text-sm);color:var(--color-text)}
-    .layout{display:grid;grid-template-columns:260px minmax(0,1fr);gap:var(--space-5)}
+    .layout{display:grid;grid-template-columns:300px minmax(0,1fr);gap:var(--space-5);align-items:start}
     .layout.chart-only{grid-template-columns:minmax(0,1fr)}
     .layout.chart-only .sidebar{display:none}
     .panel{background:var(--color-surface);border-radius:var(--radius-lg);border:1px solid var(--color-border)}
-    .sidebar{padding:var(--space-4);max-height:80vh;overflow:auto}
+    .sidebar{padding:var(--space-4);max-height:calc(100vh - 180px);overflow:auto;position:sticky;top:var(--space-4)}
     .group-title{font-size:var(--text-xs);text-transform:uppercase;letter-spacing:0.08em;color:var(--color-text-muted);margin:var(--space-3) 0 var(--space-1)}
     .letter-list{display:grid;gap:var(--space-2)}
     .letter-item{width:100%;text-align:left;padding:0.6rem 0.7rem;border-radius:var(--radius-md);border:1px solid transparent;display:flex;justify-content:space-between;align-items:center;color:var(--color-text)}
@@ -49,8 +49,8 @@
     .script{font-size:1.1rem}
     .meta{font-size:var(--text-xs);color:var(--color-text-muted)}
     .content{display:grid;gap:var(--space-4)}
-    .hero-card{padding:var(--space-4);display:grid;gap:var(--space-4);max-width:900px;margin:0 auto}
-    .pair-large{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-4)}
+    .hero-card{padding:var(--space-5);display:grid;gap:var(--space-4);max-width:none;margin:0;min-height:70vh;align-content:start}
+    .pair-large{display:grid;grid-template-columns:repeat(2,minmax(280px,1fr));gap:var(--space-4)}
     .script-box{background:var(--color-surface-2);border-radius:var(--radius-lg);padding:var(--space-4);text-align:center}
     .script-box .label{font-size:var(--text-xs);color:var(--color-text-muted);margin-bottom:var(--space-2);text-transform:uppercase;letter-spacing:0.08em}
     .script-box .big{font-size:3.5rem;line-height:1}
@@ -78,13 +78,25 @@
     .telugu{font-family:'Noto Sans Telugu',sans-serif}
     .tamil{font-family:'Noto Sans Tamil',sans-serif}
 
+    .focus-toolbar{display:none;gap:var(--space-2);flex-wrap:wrap;align-items:center;justify-content:space-between}
+    .focus-actions{display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap}
+    .small-btn{padding:0.45rem 0.85rem;border-radius:var(--radius-pill);border:1px solid var(--color-border);background:var(--color-surface-2);color:var(--color-text);font-size:var(--text-sm)}
+    .mobile-drawer{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:40;padding-top:10vh}
+    .mobile-drawer.open{display:block}
+    .drawer-panel{background:var(--color-surface);border-radius:1rem 1rem 0 0;border:1px solid var(--color-border);max-height:90vh;overflow:auto;padding:var(--space-4)}
+    .drawer-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-3)}
+    @media (max-width: 900px){
+      .focus-toolbar{display:flex}
+    }
+
     @media (max-width: 900px){
       .app{padding:var(--space-4) var(--space-3)}
       .layout{grid-template-columns:1fr}
-      .sidebar{max-height:none}
+      .sidebar{display:none}
       .pair-large{grid-template-columns:1fr}
       .toolbar{grid-template-columns:1fr;row-gap:var(--space-2)}
       table{min-width:520px}
+      .hero-card{min-height:auto;padding:var(--space-4)}
     }
   </style>
 </head>
@@ -92,7 +104,7 @@
   <div class="app">
     <div class="topbar">
       <div class="title">
-        <h1>Learn to Read & Write</h1>
+        <h1>Learn to Read and Write</h1>
         <p>Compare any two scripts (Kannada, Malayalam, Hindi, Telugu, Tamil) as full charts or one letter at a time.</p>
       </div>
       <button class="icon-btn" type="button" data-theme-toggle aria-label="Toggle theme">
@@ -139,6 +151,19 @@
         <div class="group-title">Browse letters</div>
         <div id="letterList" class="letter-list"></div>
       </aside>
+
+      <div id="mobileDrawer" class="mobile-drawer" aria-hidden="true">
+        <div class="drawer-panel">
+          <div class="drawer-head">
+            <div>
+              <div class="group-title" style="margin:0">Browse letters</div>
+              <p class="inline-note">Pick a letter, then the drawer closes.</p>
+            </div>
+            <button id="closeDrawer" type="button" class="small-btn">Close</button>
+          </div>
+          <div id="mobileLetterList" class="letter-list"></div>
+        </div>
+      </div>
 
       <main class="content">
         <section id="focusView" class="panel hero-card hidden" aria-live="polite"></section>
@@ -305,9 +330,16 @@
         htmlStr += '<span class="meta">' + item.translit + '</span></button>';
       });
       letterList.innerHTML = htmlStr;
-      Array.prototype.forEach.call(letterList.querySelectorAll('.letter-item'), function(btn){
-        btn.addEventListener('click', function(){ state.selectedId = btn.getAttribute('data-id'); render(); });
-      });
+      var mobileList = document.getElementById('mobileLetterList');
+      if (mobileList) mobileList.innerHTML = htmlStr;
+      function bindList(root, closeAfter){
+        if (!root) return;
+        Array.prototype.forEach.call(root.querySelectorAll('.letter-item'), function(btn){
+          btn.addEventListener('click', function(){ state.selectedId = btn.getAttribute('data-id'); render(); if (closeAfter) toggleDrawer(false); });
+        });
+      }
+      bindList(letterList, false);
+      bindList(mobileList, true);
     }
 
     function renderFocus(){
@@ -328,7 +360,12 @@
       var baseChar = letter[baseKey] || '–';
       var compChar = letter[compKey] || '–';
 
+      var items = filteredLetters();
+      var currentIndex = items.findIndex(function(l){ return l.id === letter.id; });
+      var prevId = currentIndex > 0 ? items[currentIndex - 1].id : '';
+      var nextId = currentIndex < items.length - 1 ? items[currentIndex + 1].id : '';
       var htmlStr = '';
+      htmlStr += '<div class="focus-toolbar"><div class="focus-actions"><button type="button" class="small-btn" id="openDrawer">Browse letters</button><button type="button" class="small-btn" id="prevLetter" ' + (prevId ? '' : 'disabled') + '>Prev</button><button type="button" class="small-btn" id="nextLetter" ' + (nextId ? '' : 'disabled') + '>Next</button></div><span class="inline-note">' + (currentIndex + 1) + ' of ' + items.length + '</span></div>';
       htmlStr += '<div><p class="inline-note">Focused view for ' + baseMeta.label + ' vs ' + compMeta.label + '.</p>';
       htmlStr += '<h2 style="margin-top:0.25rem;font-size:var(--text-lg)">' + baseChar + ' · ' + compChar + '</h2></div>';
       htmlStr += '<div class="details">';
@@ -359,6 +396,12 @@
 
       focusView.innerHTML = htmlStr;
       focusView.classList.remove('hidden');
+      var openDrawer = document.getElementById('openDrawer');
+      var prevBtn = document.getElementById('prevLetter');
+      var nextBtn = document.getElementById('nextLetter');
+      if (openDrawer){ openDrawer.addEventListener('click', function(){ toggleDrawer(true); }); }
+      if (prevBtn){ prevBtn.addEventListener('click', function(){ if (prevId){ state.selectedId = prevId; render(); } }); }
+      if (nextBtn){ nextBtn.addEventListener('click', function(){ if (nextId){ state.selectedId = nextId; render(); } }); }
     }
 
     function renderChart(){
@@ -454,6 +497,14 @@
       chartMissing.innerHTML = missHtml;
     }
 
+
+    function toggleDrawer(open){
+      var drawer = document.getElementById('mobileDrawer');
+      if (!drawer) return;
+      drawer.classList.toggle('open', open);
+      drawer.setAttribute('aria-hidden', open ? 'false' : 'true');
+    }
+
     function renderMode(){
       if (state.mode === 'table'){
         layout.classList.add('chart-only');
@@ -497,6 +548,11 @@
         render();
       });
     });
+
+    var closeDrawerBtn = document.getElementById('closeDrawer');
+    var mobileDrawer = document.getElementById('mobileDrawer');
+    if (closeDrawerBtn){ closeDrawerBtn.addEventListener('click', function(){ toggleDrawer(false); }); }
+    if (mobileDrawer){ mobileDrawer.addEventListener('click', function(e){ if (e.target === mobileDrawer) toggleDrawer(false); }); }
 
     var baseSelect = document.getElementById('baseSelect');
     var compareSelect = document.getElementById('compareSelect');
