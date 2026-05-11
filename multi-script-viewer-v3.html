@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Multi-script Letter Viewer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;500;700&family=Noto+Sans+Malayalam:wght@400;500;700&family=Noto+Sans+Devanagari:wght@400;500;700&family=Noto+Sans+Telugu:wght@400;500;700&family=Noto+Sans+Tamil:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root,[data-theme="light"]{
+      --text-xs:0.75rem;--text-sm:0.875rem;--text-base:1rem;--text-lg:1.25rem;--text-xl:1.5rem;
+      --space-1:0.25rem;--space-2:0.5rem;--space-3:0.75rem;--space-4:1rem;--space-5:1.25rem;--space-6:1.5rem;--space-8:2rem;
+      --color-bg:#f7f6f2;--color-surface:#f9f8f5;--color-surface-2:#fbfbf9;--color-border:#d4d1ca;
+      --color-text:#28251d;--color-text-muted:#6f6a63;--color-primary:#01696f;
+      --radius-md:0.65rem;--radius-lg:0.9rem;--radius-pill:999px;
+    }
+    [data-theme="dark"]{
+      --color-bg:#171614;--color-surface:#1c1b19;--color-surface-2:#22211f;--color-border:#3a3834;
+      --color-text:#e4e0d8;--color-text-muted:#9a948a;--color-primary:#4f98a3;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,sans-serif;font-size:var(--text-base);background:var(--color-bg);color:var(--color-text);min-height:100vh}
+    button{font:inherit;border:none;background:none;cursor:pointer}
+    .app{max-width:1200px;margin:0 auto;padding:var(--space-6) var(--space-4)}
+    .topbar{display:flex;justify-content:space-between;gap:var(--space-4);align-items:flex-start;flex-wrap:wrap;margin-bottom:var(--space-5)}
+    .title h1{font-size:var(--text-xl);margin-bottom:var(--space-2)}
+    .title p{font-size:var(--text-sm);color:var(--color-text-muted);max-width:60ch}
+    .icon-btn{width:40px;height:40px;border-radius:50%;border:1px solid var(--color-border);display:grid;place-items:center;background:var(--color-surface)}
+    .toolbar{display:grid;grid-template-columns:auto auto minmax(0,1fr);gap:var(--space-3);align-items:center;margin-bottom:var(--space-5)}
+    .segment{display:inline-flex;gap:0.25rem;background:var(--color-surface);border-radius:var(--radius-pill);border:1px solid var(--color-border);padding:0.2rem}
+    .seg-btn{padding:0.45rem 0.9rem;border-radius:var(--radius-pill);font-size:var(--text-sm);color:var(--color-text-muted)}
+    .seg-btn[aria-pressed="true"]{background:var(--color-primary);color:#fff}
+    .filter-segment{justify-self:flex-start}
+    .compare-group{display:flex;gap:var(--space-2);justify-self:flex-end;align-items:center;flex-wrap:wrap}
+    .compare-label{font-size:var(--text-xs);color:var(--color-text-muted)}
+    .lang-select{border-radius:var(--radius-pill);border:1px solid var(--color-border);background:var(--color-surface);padding:0.35rem 0.8rem;font-size:var(--text-sm);color:var(--color-text)}
+    .layout{display:grid;grid-template-columns:260px minmax(0,1fr);gap:var(--space-5)}
+    .layout.chart-only{grid-template-columns:minmax(0,1fr)}
+    .layout.chart-only .sidebar{display:none}
+    .panel{background:var(--color-surface);border-radius:var(--radius-lg);border:1px solid var(--color-border)}
+    .sidebar{padding:var(--space-4);max-height:80vh;overflow:auto}
+    .group-title{font-size:var(--text-xs);text-transform:uppercase;letter-spacing:0.08em;color:var(--color-text-muted);margin:var(--space-3) 0 var(--space-1)}
+    .letter-list{display:grid;gap:var(--space-2)}
+    .letter-item{width:100%;text-align:left;padding:0.6rem 0.7rem;border-radius:var(--radius-md);border:1px solid transparent;display:flex;justify-content:space-between;align-items:center;color:var(--color-text)}
+    .letter-item:hover{background:var(--color-surface-2);border-color:var(--color-border)}
+    .letter-item.active{background:var(--color-primary);border-color:var(--color-primary);color:#fff}
+    .pair-mini{display:flex;gap:0.35rem;align-items:baseline}
+    .script{font-size:1.1rem}
+    .meta{font-size:var(--text-xs);color:var(--color-text-muted)}
+    .content{display:grid;gap:var(--space-4)}
+    .hero-card{padding:var(--space-4);display:grid;gap:var(--space-4);max-width:900px;margin:0 auto}
+    .pair-large{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-4)}
+    .script-box{background:var(--color-surface-2);border-radius:var(--radius-lg);padding:var(--space-4);text-align:center}
+    .script-box .label{font-size:var(--text-xs);color:var(--color-text-muted);margin-bottom:var(--space-2);text-transform:uppercase;letter-spacing:0.08em}
+    .script-box .big{font-size:3.5rem;line-height:1}
+    .script-box .small{font-size:var(--text-sm);color:var(--color-text-muted);margin-top:var(--space-2)}
+    .details{display:flex;flex-wrap:wrap;gap:var(--space-2);align-items:flex-start}
+    .chip{padding:0.3rem 0.7rem;border-radius:var(--radius-pill);border:1px solid var(--color-border);font-size:var(--text-xs);background:var(--color-surface-2)}
+    .row-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:var(--space-2)}
+    .cell{background:var(--color-surface-2);border-radius:var(--radius-md);padding:var(--space-3);text-align:center}
+    .cell .v{font-size:var(--text-xs);color:var(--color-text-muted);margin-bottom:var(--space-1)}
+    .pair{display:grid;gap:0.2rem}
+    .pair div{font-size:1.1rem}
+    .table-shell{padding:var(--space-4);overflow-x:auto}
+    table{border-collapse:collapse;width:100%;min-width:640px}
+    th,td{padding:0.5rem 0.4rem;border-bottom:1px solid var(--color-border);font-size:var(--text-sm);text-align:center}
+    th{text-transform:uppercase;font-size:var(--text-xs);letter-spacing:0.08em;color:var(--color-text-muted)}
+    th:first-child,td:first-child{text-align:left}
+    .chart-tabs{display:flex;gap:0.25rem;margin-bottom:var(--space-3)}
+    .chart-tab{padding:0.35rem 0.9rem;border-radius:var(--radius-pill);border:1px solid var(--color-border);font-size:var(--text-xs);background:var(--color-surface-2);color:var(--color-text-muted)}
+    .chart-tab.active{background:var(--color-primary);color:#fff;border-color:var(--color-primary)}
+    .hidden{display:none !important}
+    .inline-note{font-size:var(--text-sm);color:var(--color-text-muted)}
+    .kannada{font-family:'Noto Sans Kannada',sans-serif}
+    .malayalam{font-family:'Noto Sans Malayalam',sans-serif}
+    .hindi{font-family:'Noto Sans Devanagari',sans-serif}
+    .telugu{font-family:'Noto Sans Telugu',sans-serif}
+    .tamil{font-family:'Noto Sans Tamil',sans-serif}
+
+    @media (max-width: 900px){
+      .app{padding:var(--space-4) var(--space-3)}
+      .layout{grid-template-columns:1fr}
+      .sidebar{max-height:none}
+      .pair-large{grid-template-columns:1fr}
+      .toolbar{grid-template-columns:1fr;row-gap:var(--space-2)}
+      table{min-width:520px}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="title">
+        <h1>Multi-script letter viewer</h1>
+        <p>Compare any two scripts (Kannada, Malayalam, Hindi, Telugu, Tamil) as full charts or one letter at a time.</p>
+      </div>
+      <button class="icon-btn" type="button" data-theme-toggle aria-label="Toggle theme">
+        <span>☾</span>
+      </button>
+    </div>
+
+    <div class="toolbar">
+      <div class="segment" role="tablist" aria-label="View mode">
+        <button class="seg-btn" id="tableToggle" type="button" aria-pressed="true">Chart view</button>
+        <button class="seg-btn" id="focusToggle" type="button" aria-pressed="false">Letter view</button>
+      </div>
+      <div class="segment filter-segment" role="tablist" aria-label="Letter type">
+        <button class="seg-btn filter-btn" type="button" data-filter="all" aria-pressed="true">All</button>
+        <button class="seg-btn filter-btn" type="button" data-filter="vowel" aria-pressed="false">Vowels</button>
+        <button class="seg-btn filter-btn" type="button" data-filter="consonant" aria-pressed="false">Consonants</button>
+      </div>
+      <div class="compare-group" aria-label="Choose scripts to compare">
+        <div class="segment">
+          <span class="compare-label">Base</span>
+          <select id="baseSelect" class="lang-select">
+            <option value="kannada">Kannada</option>
+            <option value="malayalam">Malayalam</option>
+            <option value="hindi">Hindi</option>
+            <option value="telugu">Telugu</option>
+            <option value="tamil">Tamil</option>
+          </select>
+        </div>
+        <div class="segment">
+          <span class="compare-label">Compare with</span>
+          <select id="compareSelect" class="lang-select">
+            <option value="malayalam">Malayalam</option>
+            <option value="kannada">Kannada</option>
+            <option value="hindi">Hindi</option>
+            <option value="telugu">Telugu</option>
+            <option value="tamil">Tamil</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="layout">
+      <aside class="panel sidebar">
+        <div class="group-title">Browse letters</div>
+        <div id="letterList" class="letter-list"></div>
+      </aside>
+
+      <main class="content">
+        <section id="focusView" class="panel hero-card hidden" aria-live="polite"></section>
+
+        <section id="chartWrapper" class="panel table-shell">
+          <div class="chart-tabs" role="tablist" aria-label="Chart sections">
+            <button type="button" class="chart-tab active" data-section="main">Main chart</button>
+            <button type="button" class="chart-tab" data-section="missing">Missing letters</button>
+          </div>
+          <div id="chartMain"></div>
+          <div id="chartMissing" class="hidden"></div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    const scripts = {
+      kannada:{ key:'kannada', label:'Kannada', className:'kannada', matraKey:'k' },
+      malayalam:{ key:'malayalam', label:'Malayalam', className:'malayalam', matraKey:'m' },
+      hindi:{ key:'hindi', label:'Hindi', className:'hindi', matraKey:'h' },
+      telugu:{ key:'telugu', label:'Telugu', className:'telugu', matraKey:'te' },
+      tamil:{ key:'tamil', label:'Tamil', className:'tamil', matraKey:'ta' }
+    };
+
+    const vowels = [
+      { id:'v-a',  type:'vowel', group:'Independent vowels', translit:'a',  kannada:'ಅ', malayalam:'അ', hindi:'अ', telugu:'అ', tamil:'அ' },
+      { id:'v-aa', type:'vowel', group:'Independent vowels', translit:'ā', kannada:'ಆ', malayalam:'ആ', hindi:'आ', telugu:'ఆ', tamil:'ஆ' },
+      { id:'v-i',  type:'vowel', group:'Independent vowels', translit:'i',  kannada:'ಇ', malayalam:'ഇ', hindi:'इ', telugu:'ఇ', tamil:'இ' },
+      { id:'v-ii', type:'vowel', group:'Independent vowels', translit:'ī', kannada:'ಈ', malayalam:'ഈ', hindi:'ई', telugu:'ఈ', tamil:'ஈ' },
+      { id:'v-u',  type:'vowel', group:'Independent vowels', translit:'u',  kannada:'ಉ', malayalam:'ഉ', hindi:'उ', telugu:'ఉ', tamil:'உ' },
+      { id:'v-uu', type:'vowel', group:'Independent vowels', translit:'ū', kannada:'ಊ', malayalam:'ഊ', hindi:'ऊ', telugu:'ఊ', tamil:'ஊ' },
+      { id:'v-r',  type:'vowel', group:'Independent vowels', translit:'ṛ', kannada:'ಋ', malayalam:'ഋ', hindi:'ऋ', telugu:'ఋ', tamil:'' },
+      { id:'v-e',  type:'vowel', group:'Independent vowels', translit:'e',  kannada:'ಎ', malayalam:'എ', hindi:'ए', telugu:'ఎ', tamil:'எ' },
+      { id:'v-ee', type:'vowel', group:'Independent vowels', translit:'ē', kannada:'ಏ', malayalam:'ഏ', hindi:'ऐ', telugu:'ఏ', tamil:'ஏ' },
+      { id:'v-ai', type:'vowel', group:'Independent vowels', translit:'ai', kannada:'ಐ', malayalam:'ഐ', hindi:'ऐ', telugu:'ఐ', tamil:'ஐ' },
+      { id:'v-o',  type:'vowel', group:'Independent vowels', translit:'o',  kannada:'ಒ', malayalam:'ഒ', hindi:'ओ', telugu:'ఒ', tamil:'ஒ' },
+      { id:'v-oo', type:'vowel', group:'Independent vowels', translit:'ō', kannada:'ಓ', malayalam:'ഓ', hindi:'ओ', telugu:'ఓ', tamil:'ஓ' },
+      { id:'v-au', type:'vowel', group:'Independent vowels', translit:'au', kannada:'ಔ', malayalam:'ഔ', hindi:'औ', telugu:'ఔ', tamil:'ஔ' },
+      { id:'v-am', type:'vowel', group:'Independent vowels', translit:'aṃ',kannada:'ಅಂ', malayalam:'അം', hindi:'अं', telugu:'అం', tamil:'அம்' }
+    ];
+
+    const vowelForms = [
+      { key:'a',  label:'a',  k:'',  m:'',  h:'',  te:'',   ta:''   },
+      { key:'aa', label:'ā', k:'ಾ', m:'ാ', h:'ा', te:'ా',  ta:'ா'  },
+      { key:'i',  label:'i',  k:'ಿ', m:'ി', h:'ि', te:'ి',  ta:'ி'  },
+      { key:'ii', label:'ī', k:'ೀ', m:'ീ', h:'ी', te:'ీ',  ta:'ீ'  },
+      { key:'u',  label:'u',  k:'ು', m:'ു', h:'ु', te:'ు',  ta:'ு'  },
+      { key:'uu', label:'ū', k:'ೂ', m:'ൂ', h:'ू', te:'ూ',  ta:'ூ'  },
+      { key:'r',  label:'ṛ', k:'ೃ', m:'ൃ', h:'ृ', te:'ృ',  ta:''   },
+      { key:'e',  label:'e',  k:'ೆ', m:'െ', h:'े', te:'ె',  ta:'ெ'  },
+      { key:'ee', label:'ē', k:'ೇ', m:'േ', h:'ै', te:'ే',  ta:'ே'  },
+      { key:'ai', label:'ai',k:'ೈ', m:'ൈ', h:'ै', te:'ై',  ta:'ை'  },
+      { key:'o',  label:'o',  k:'ೊ', m:'ൊ', h:'ो', te:'ొ',  ta:'ொ'  },
+      { key:'oo', label:'ō', k:'ೋ', m:'ോ', h:'ो', te:'ో',  ta:'ோ'  },
+      { key:'au', label:'au',k:'ೌ', m:'ൗ', h:'ौ', te:'ౌ',  ta:'ௌ' }
+    ];
+
+    const consonantRows = [
+      ['Velar','k','ಕ','ക','क','క','க'],
+      ['Velar','kh','ಖ','ഖ','ख','ఖ','க்ஹ'],
+      ['Velar','g','ಗ','ഗ','ग','గ','க்ஃ'],
+      ['Velar','gh','ಘ','ഘ','घ','ఘ','க்ஹ'],
+      ['Velar','ṅ','ಙ','ങ','ङ','ఙ','ங'],
+      ['Palatal','c','ಚ','ച','च','చ','ச'],
+      ['Palatal','ch','ಛ','ഛ','छ','ఛ','ச்ஹ'],
+      ['Palatal','j','ಜ','ജ','ज','జ','ஜ'],
+      ['Palatal','jh','ಝ','ഝ','झ','ఝ','ஜ்ஹ'],
+      ['Palatal','ñ','ಞ','ഞ','ञ','ఞ','ஞ'],
+      ['Retroflex','ṭ','ಟ','ട','ट','ట','ட'],
+      ['Retroflex','ṭh','ಠ','ഠ','ठ','ఠ','ட்ஹ'],
+      ['Retroflex','ḍ','ಡ','ഡ','ड','డ','ட்ஃ'],
+      ['Retroflex','ḍh','ಢ','ഢ','ढ','ఢ','ட்ஹ'],
+      ['Retroflex','ṇ','ಣ','ണ','ण','ణ','ண'],
+      ['Dental','t','ತ','ത','त','త','த'],
+      ['Dental','th','ಥ','ഥ','थ','థ','த்ஹ'],
+      ['Dental','d','ದ','ദ','द','ద','த்ஃ'],
+      ['Dental','dh','ಧ','ധ','ध','ధ','த்ஹ'],
+      ['Dental','n','ನ','ന','न','న','ந'],
+      ['Labial','p','ಪ','പ','प','ప','ப'],
+      ['Labial','ph','ಫ','ഫ','फ','ఫ','ப்ஹ'],
+      ['Labial','b','ಬ','ബ','ब','బ','ப்ஃ'],
+      ['Labial','bh','ಭ','ഭ','भ','భ','ப்ஹ'],
+      ['Labial','m','ಮ','മ','म','మ','ம'],
+      ['Other','y','ಯ','യ','य','య','ய'],
+      ['Other','r','ರ','ര','र','ర','ர'],
+      ['Other','l','ಲ','ല','ल','ల','ல'],
+      ['Other','v','ವ','വ','व','వ','வ'],
+      ['Other','ś','ಶ','ശ','श','శ','ஷ'],
+      ['Other','ṣ','ಷ','ഷ','ष','ష','ஷ'],
+      ['Other','s','ಸ','സ','स','స','ஸ'],
+      ['Other','h','ಹ','ഹ','ह','హ','ஹ'],
+      ['Other','ḷ','ಳ','ള','ळ','ళ','ள'],
+      ['Other','ḻ','','ഴ','','','ழ']
+    ];
+
+    const consonants = consonantRows.map(function(row){
+      return {
+        group: row[0] + ' consonants',
+        translit: row[1],
+        kannada: row[2],
+        malayalam: row[3],
+        hindi: row[4],
+        telugu: row[5],
+        tamil: row[6],
+        id: 'c-' + row[1],
+        type: 'consonant'
+      };
+    });
+
+    const letters = vowels.concat(consonants);
+
+    var state = {
+      mode:'table',
+      filter:'all',
+      base:'kannada',
+      compare:'malayalam',
+      selectedId: letters[0].id
+    };
+
+    var letterList = document.getElementById('letterList');
+    var focusView = document.getElementById('focusView');
+    var chartMain = document.getElementById('chartMain');
+    var chartMissing = document.getElementById('chartMissing');
+    var tableToggle = document.getElementById('tableToggle');
+    var focusToggle = document.getElementById('focusToggle');
+    var layout = document.querySelector('.layout');
+
+    function filteredLetters(){
+      return letters.filter(function(l){
+        if (state.filter !== 'all' && l.type !== state.filter) return false;
+        return true;
+      });
+    }
+
+    function ensureSelection(){
+      var pool = filteredLetters();
+      if (!pool.length) return;
+      var found = pool.some(function(l){ return l.id === state.selectedId; });
+      if (!found) state.selectedId = pool[0].id;
+    }
+
+    function renderList(){
+      var baseKey = state.base;
+      var compKey = state.compare;
+      var items = filteredLetters();
+      ensureSelection();
+      if (!items.length){
+        letterList.innerHTML = '<p class="inline-note">No letters for this filter.</p>';
+        return;
+      }
+      var htmlStr = '';
+      var currentGroup = '';
+      items.forEach(function(item){
+        if (item.group !== currentGroup){
+          currentGroup = item.group;
+          htmlStr += '<div class="group-title">' + currentGroup + '</div>';
+        }
+        var left = item[baseKey] || '–';
+        var right = item[compKey] || '–';
+        htmlStr += '<button type="button" class="letter-item' + (item.id===state.selectedId?' active':'') + '" data-id="' + item.id + '">';
+        htmlStr += '<span class="pair-mini"><span class="script ' + baseKey + '">' + left + '</span>';
+        htmlStr += '<span class="script ' + compKey + '">' + right + '</span></span>';
+        htmlStr += '<span class="meta">' + item.translit + '</span></button>';
+      });
+      letterList.innerHTML = htmlStr;
+      Array.prototype.forEach.call(letterList.querySelectorAll('.letter-item'), function(btn){
+        btn.addEventListener('click', function(){ state.selectedId = btn.getAttribute('data-id'); render(); });
+      });
+    }
+
+    function renderFocus(){
+      if (state.mode !== 'focus'){
+        focusView.classList.add('hidden');
+        return;
+      }
+      var letter = letters.find(function(l){ return l.id === state.selectedId; });
+      if (!letter){
+        focusView.innerHTML = '<p class="inline-note">Pick a letter from the left.</p>';
+        focusView.classList.remove('hidden');
+        return;
+      }
+      var baseKey = state.base;
+      var compKey = state.compare;
+      var baseMeta = scripts[baseKey];
+      var compMeta = scripts[compKey];
+      var baseChar = letter[baseKey] || '–';
+      var compChar = letter[compKey] || '–';
+
+      var htmlStr = '';
+      htmlStr += '<div><p class="inline-note">Focused view for ' + baseMeta.label + ' vs ' + compMeta.label + '.</p>';
+      htmlStr += '<h2 style="margin-top:0.25rem;font-size:var(--text-lg)">' + baseChar + ' · ' + compChar + '</h2></div>';
+      htmlStr += '<div class="details">';
+      htmlStr += '<span class="chip">' + (letter.type === 'vowel' ? 'Vowel' : 'Consonant') + '</span>';
+      htmlStr += '<span class="chip">' + letter.group + '</span>';
+      htmlStr += '<span class="chip">Sound: ' + letter.translit + '</span>';
+      htmlStr += '</div>';
+      htmlStr += '<div class="pair-large">';
+      htmlStr += '<div class="script-box"><div class="label">' + baseMeta.label + '</div><div class="big ' + baseMeta.className + '">' + baseChar + '</div><div class="small">' + letter.translit + '</div></div>';
+      htmlStr += '<div class="script-box"><div class="label">' + compMeta.label + '</div><div class="big ' + compMeta.className + '">' + compChar + '</div><div class="small">' + letter.translit + '</div></div>';
+      htmlStr += '</div>';
+
+      if (letter.type === 'consonant'){
+        htmlStr += '<div><h3 style="margin:0 0 var(--space-2);font-size:var(--text-base)">All vowel combinations</h3>';
+        htmlStr += '<div class="row-grid">';
+        vowelForms.forEach(function(vf){
+          var baseMatra = vf[baseMeta.matraKey] || '';
+          var compMatra = vf[compMeta.matraKey] || '';
+          var baseCombo = (letter[baseKey] || '–') + (baseMatra || '');
+          var compCombo = (letter[compKey] || '–') + (compMatra || '');
+          htmlStr += '<div class="cell"><div class="v">' + vf.label + '</div>';
+          htmlStr += '<div class="pair"><div class="' + baseMeta.className + '">' + baseCombo + '</div><div class="' + compMeta.className + '">' + compCombo + '</div></div></div>';
+        });
+        htmlStr += '</div>';
+        htmlStr += '<p class="inline-note" style="margin-top:var(--space-2)">Each cell shows the consonant with that vowel in both scripts where dependent signs exist; otherwise the base consonant is repeated.</p>';
+        htmlStr += '</div>';
+      }
+
+      focusView.innerHTML = htmlStr;
+      focusView.classList.remove('hidden');
+    }
+
+    function renderChart(){
+      if (state.mode !== 'table'){
+        document.getElementById('chartWrapper').classList.add('hidden');
+        return;
+      }
+      document.getElementById('chartWrapper').classList.remove('hidden');
+      var baseKey = state.base;
+      var compKey = state.compare;
+      var baseMeta = scripts[baseKey];
+      var compMeta = scripts[compKey];
+      var vowelRows = vowels.slice();
+      var consRows = consonants.slice();
+
+      var mainHtml = '';
+      if (vowelRows.length){
+        mainHtml += '<section class="vowel-section" style="margin-bottom:var(--space-4)"><h2 style="margin:0 0 var(--space-2);font-size:var(--text-base)">Independent vowels (' + baseMeta.label + ' vs ' + compMeta.label + ')</h2>';
+        mainHtml += '<table><thead><tr><th>Sound</th><th>' + baseMeta.label + '</th><th>' + compMeta.label + '</th></tr></thead><tbody>';
+        vowelRows.forEach(function(v){
+          var baseChar = v[baseKey] || '–';
+          var compChar = v[compKey] || '–';
+          mainHtml += '<tr><td>' + v.translit + '</td><td class="script ' + baseMeta.className + '">' + baseChar + '</td><td class="script ' + compMeta.className + '">' + compChar + '</td></tr>';
+        });
+        mainHtml += '</tbody></table></section>';
+      }
+
+      if (consRows.length){
+        var groups = ['Velar consonants','Palatal consonants','Retroflex consonants','Dental consonants','Labial consonants','Other consonants'];
+        mainHtml += '<section class="consonant-section"><h2 style="margin:0 0 var(--space-2);font-size:var(--text-base)">Consonants with vowel forms (' + baseMeta.label + ' vs ' + compMeta.label + ')</h2>';
+        groups.forEach(function(g){
+          var groupItems = consRows.filter(function(c){ return c.group === g; });
+          if (!groupItems.length) return;
+          mainHtml += '<div class="cons-group" data-group="' + g + '" style="margin-top:var(--space-4)"><h3 style="margin:0 0 var(--space-2);font-size:var(--text-sm);text-transform:uppercase;letter-spacing:0.08em">' + g + '</h3>';
+          mainHtml += '<table><thead><tr><th>Base</th>';
+          vowelForms.forEach(function(vf){ mainHtml += '<th>' + vf.label + '</th>'; });
+          mainHtml += '</tr></thead><tbody>';
+          groupItems.forEach(function(c){
+            var baseChar = c[baseKey] || '–';
+            mainHtml += '<tr><td><div class="pair-stacked"><span class="script ' + baseMeta.className + '">' + baseChar + '</span><span class="meta">' + c.translit + '</span></div></td>';
+            vowelForms.forEach(function(vf){
+              var baseMatra = vf[baseMeta.matraKey] || '';
+              var compMatra = vf[compMeta.matraKey] || '';
+              var baseCombo = (c[baseKey] || '–') + (baseMatra || '');
+              var compCombo = (c[compKey] || '–') + (compMatra || '');
+              mainHtml += '<td><div class="pair"><div class="script ' + baseMeta.className + '">' + baseCombo + '</div><div class="script ' + compMeta.className + '">' + compCombo + '</div></div></td>';
+            });
+            mainHtml += '</tr>';
+          });
+          mainHtml += '</tbody></table></div>';
+        });
+        mainHtml += '</section>';
+      }
+
+      if (!vowelRows.length && !consRows.length){
+        mainHtml = '<p class="inline-note">No letters for this filter.</p>';
+      }
+
+      chartMain.innerHTML = mainHtml;
+
+      // Missing letters: letters that exist in compare script but not in base script
+      var missVowels = vowelRows.filter(function(v){ return v[compKey] && !v[baseKey]; });
+      var missCons = consRows.filter(function(c){ return c[compKey] && !c[baseKey]; });
+      var missHtml = '';
+      if (!missVowels.length && !missCons.length){
+        missHtml = '<p class="inline-note">No letters in ' + compMeta.label + ' are completely missing from ' + baseMeta.label + ' for this set.</p>';
+      } else {
+        missHtml += '<h2 style="margin:0 0 var(--space-3);font-size:var(--text-base)">Letters in ' + compMeta.label + ' without a dedicated ' + baseMeta.label + ' letter</h2>';
+        if (missVowels.length){
+          missHtml += '<section style="margin-bottom:var(--space-3)"><h3 style="margin:0 0 var(--space-2);font-size:var(--text-sm)">Vowels</h3><table><thead><tr><th>Sound</th><th>Letter in ' + compMeta.label + '</th><th>Why missing in ' + baseMeta.label + '</th></tr></thead><tbody>';
+          missVowels.forEach(function(v){
+            var letter = v[compKey] || '–';
+            var reason = 'This vowel is not part of the standard ' + baseMeta.label + ' inventory; related sounds may be written with other vowels or sequences.';
+            missHtml += '<tr><td>' + v.translit + '</td><td class="script ' + compMeta.className + '">' + letter + '</td><td>' + reason + '</td></tr>';
+          });
+          missHtml += '</tbody></table></section>';
+        }
+        if (missCons.length){
+          missHtml += '<section><h3 style="margin:0 0 var(--space-2);font-size:var(--text-sm)">Consonants</h3><table><thead><tr><th>Letter in ' + compMeta.label + '</th><th>Sound</th><th>Why missing in ' + baseMeta.label + '</th></tr></thead><tbody>';
+          missCons.forEach(function(c){
+            var base = c[compKey] || '–';
+            var reason;
+            if ((compKey === 'tamil' || compKey === 'malayalam') && c.translit === 'ḷ'){
+              reason = 'The retroflex lateral /ɭ/ (ழ / ഴ) is preserved as a distinct letter in ' + compMeta.label + ' but not as a separate consonant in ' + baseMeta.label + '.';
+            } else {
+              reason = 'This consonant has no dedicated letter in ' + baseMeta.label + '; similar sounds are represented with other consonants or clusters.';
+            }
+            missHtml += '<tr><td class="script ' + compMeta.className + '">' + base + '</td><td>' + c.translit + '</td><td>' + reason + '</td></tr>';
+          });
+          missHtml += '</tbody></table></section>';
+        }
+      }
+      chartMissing.innerHTML = missHtml;
+    }
+
+    function renderMode(){
+      if (state.mode === 'table'){
+        layout.classList.add('chart-only');
+        focusView.classList.add('hidden');
+        document.getElementById('chartWrapper').classList.remove('hidden');
+        tableToggle.setAttribute('aria-pressed','true');
+        focusToggle.setAttribute('aria-pressed','false');
+      } else {
+        layout.classList.remove('chart-only');
+        focusView.classList.remove('hidden');
+        document.getElementById('chartWrapper').classList.add('hidden');
+        tableToggle.setAttribute('aria-pressed','false');
+        focusToggle.setAttribute('aria-pressed','true');
+      }
+    }
+
+    function renderTabs(){
+      var mainBtn = document.querySelector('.chart-tab[data-section="main"]');
+      var missBtn = document.querySelector('.chart-tab[data-section="missing"]');
+      mainBtn.classList.add('active');
+      missBtn.classList.remove('active');
+      chartMain.classList.remove('hidden');
+      chartMissing.classList.add('hidden');
+    }
+
+    function render(){
+      renderMode();
+      renderList();
+      renderFocus();
+      renderChart();
+      renderTabs();
+    }
+
+    tableToggle.addEventListener('click', function(){ state.mode = 'table'; render(); });
+    focusToggle.addEventListener('click', function(){ state.mode = 'focus'; render(); });
+
+    Array.prototype.forEach.call(document.querySelectorAll('.filter-btn'), function(btn){
+      btn.addEventListener('click', function(){
+        state.filter = btn.getAttribute('data-filter');
+        Array.prototype.forEach.call(document.querySelectorAll('.filter-btn'), function(b){ b.setAttribute('aria-pressed', String(b===btn)); });
+        render();
+      });
+    });
+
+    var baseSelect = document.getElementById('baseSelect');
+    var compareSelect = document.getElementById('compareSelect');
+    baseSelect.value = state.base;
+    compareSelect.value = state.compare;
+
+    baseSelect.addEventListener('change', function(){
+      state.base = baseSelect.value;
+      render();
+    });
+    compareSelect.addEventListener('change', function(){
+      state.compare = compareSelect.value;
+      render();
+    });
+
+    Array.prototype.forEach.call(document.querySelectorAll('.chart-tab'), function(btn){
+      btn.addEventListener('click', function(){
+        var section = btn.getAttribute('data-section');
+        Array.prototype.forEach.call(document.querySelectorAll('.chart-tab'), function(b){ b.classList.toggle('active', b===btn); });
+        if (section === 'main'){
+          chartMain.classList.remove('hidden');
+          chartMissing.classList.add('hidden');
+        } else {
+          chartMain.classList.add('hidden');
+          chartMissing.classList.remove('hidden');
+        }
+      });
+    });
+
+    (function(){
+      var t = document.querySelector('[data-theme-toggle]');
+      var root = document.documentElement;
+      var dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      root.setAttribute('data-theme', dark ? 'dark' : 'light');
+      t.addEventListener('click', function(){ dark = !dark; root.setAttribute('data-theme', dark ? 'dark' : 'light'); });
+    })();
+
+    render();
+  </script>
+</body>
+</html>
